@@ -1,0 +1,215 @@
+/* A scroll-controlled book opening, using original artwork and DOM depth. */
+#book-portal{position:relative;height:390svh;background:#e4d6ba;scroll-margin-top:0}#book-portal .portal-stage{position:sticky;top:0;width:100%;height:100svh;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,#fff7e7,#ddc9a5);isolation:isolate}.portal-camera{position:absolute;inset:0;perspective:1800px;perspective-origin:50% 45%;transform-style:preserve-3d}.portal-paper{position:absolute;inset:0;background:#f9f1db;clip-path:inset(var(--clip-y,15%) var(--clip-x,32%) round 7px);transform:translateX(var(--book-x,0px)) rotate(var(--book-tilt,-4deg));transform-origin:50% 50%;overflow:hidden}.portal-paper:after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent 30%,#39250b14 48%,transparent 62%);opacity:var(--paper-shade,1)}.portal-world{width:100%;height:100%;object-fit:cover;display:block;transform:scale(var(--world-scale,.35));transform-origin:center;will-change:transform}.portal-paper-caption{position:absolute;top:calc(50% - var(--book-h,560px)/2 + 35px);left:50%;transform:translateX(-50%);font:13px var(--mono);color:var(--blue);opacity:var(--paper-label,0);white-space:nowrap}.portal-lid{position:absolute;left:calc(50% - var(--book-w,440px)/2);top:calc(50% - var(--book-h,560px)/2);width:var(--book-w,440px);height:var(--book-h,560px);transform-style:preserve-3d;transform-origin:0 50%;transform:translateX(var(--book-x,0px)) rotateZ(var(--book-tilt,-4deg)) rotateY(var(--lid-angle,0deg));opacity:var(--lid-opacity,1);will-change:transform}.portal-front,.portal-back{position:absolute;inset:0;backface-visibility:hidden;border:4px solid var(--ink);border-radius:4px 12px 12px 4px;box-shadow:8px 9px 0 #2228}.portal-front{background:#f4e8c9;padding:9% 11%;display:flex;flex-direction:column;align-items:flex-start;background-image:repeating-linear-gradient(0deg,#a18b6410 0 1px,transparent 1px 5px)}.portal-front:before{content:'';position:absolute;left:0;top:0;bottom:0;width:15px;border-right:2px solid #262016;background:repeating-linear-gradient(0deg,#1c1a16 0 8px,#ffda37 8px 17px)}.portal-front small{font:10px var(--mono);margin-bottom:15px}.portal-emblem{width:64px;height:64px;object-fit:contain;align-self:flex-end;margin-bottom:10px}.portal-front h1{font:clamp(42px,5vw,80px)/.98 var(--display);letter-spacing:.025em;color:var(--blue);margin:0;text-shadow:3px 3px 0 var(--yellow)}.portal-front h1 span:nth-child(2){color:#e46b2f}.portal-front p{font:22px/1.1 var(--hand);margin:20px 0 0}.portal-cover-note{margin-top:auto!important;align-self:flex-end;color:#c33d30;transform:rotate(-5deg)}.portal-back{transform:rotateY(180deg);background:#f4e8c9;background-image:linear-gradient(90deg,#9282703d,transparent 20%)}.portal-hint{position:absolute;z-index:5;bottom:25px;left:0;right:0;text-align:center;pointer-events:none;color:#28221a;opacity:var(--hint-opacity,1)}.portal-hint b{font:11px var(--mono);background:#f9f1dbdf;padding:8px 12px;display:inline-block}.portal-hint span{display:block;font:25px var(--hand);margin-top:5px}.portal-skip{position:absolute;z-index:8;right:25px;bottom:28px;background:var(--paper);border:2px solid var(--ink);padding:8px 12px;font:10px var(--mono);box-shadow:3px 3px 0 var(--ink)}.portal-skip:focus-visible{outline:4px solid var(--red);outline-offset:4px}.book-portal-enabled #cover{display:none}.portal-step{position:absolute;left:25px;bottom:30px;z-index:5;font:10px var(--mono);color:var(--paper);background:#164bb4;padding:7px 10px;opacity:var(--step-opacity,0)}
+@media(max-width:700px){#book-portal{height:320svh}.portal-front h1{font-size:clamp(38px,12vw,62px)}.portal-front p{font-size:19px}.portal-front small{font-size:8px}.portal-emblem{width:42px;height:42px;margin-bottom:8px}.portal-skip{right:15px;bottom:15px;font-size:8px}.portal-step{left:15px;bottom:15px;font-size:8px}.portal-hint{bottom:65px}.portal-front{padding:9% 12%}}@media(prefers-reduced-motion:reduce){#book-portal{height:100svh}.portal-lid{transform:rotate(-3deg)!important;opacity:1!important}.portal-paper{display:none}.portal-hint span{display:none}.portal-hint b{font-size:10px}.portal-step{display:none}}
+
+.portal-emblem{position:absolute;top:7%;right:10%;width:50px;height:50px}.portal-front h1{font-size:clamp(38px,calc(var(--book-h,560px)*.115),76px)}.portal-front small{max-width:70%}.portal-front h1 span:nth-of-type(2){color:#e46b2f}.portal-front p{font-size:clamp(17px,calc(var(--book-h,560px)*.038),23px)}
+
+/* Opaque inside cover; printed face is explicitly hidden beyond the hinge. */
+.portal-back{backface-visibility:visible;background-color:#f0e3c4;background-image:linear-gradient(90deg,#bca77875,transparent 23%),repeating-linear-gradient(0deg,#76634408 0 1px,transparent 1px 5px)}.portal-back:after{content:'';position:absolute;inset:13px;border:1px solid #b7a480;border-radius:2px}.book-portal-enabled #house.book-handoff{margin-top:-100svh;position:relative;z-index:3;will-change:opacity,transform}.book-portal-enabled #house.book-handoff .scene-sticky>img{transform:scale(1.015)!important}.portal-paper:after{opacity:var(--paper-shade,1)}
+@media(prefers-reduced-motion:reduce){.book-portal-enabled #house.book-handoff{margin-top:0;opacity:1!important;transform:none!important;pointer-events:auto!important}}
+/* Each chapter enters as a sheet, then settles flat for reading. */
+.book-leaf{position:relative;isolation:isolate;box-shadow:0 -4px 0 #bda981,0 -8px 0 #e8d8b8,0 -12px 0 #1a1917;transform-origin:0 50%;backface-visibility:hidden}.leaf-motion .book-leaf{transform:perspective(1800px) rotateY(calc(var(--leaf-arrival,0)* -11deg))}.leaf-edge{display:block;position:absolute;pointer-events:none;z-index:15;top:0;bottom:0;left:0;width:clamp(10px,2vw,30px);background:linear-gradient(90deg,#35261566,#f3ead599 28%,#fff6e955 50%,transparent);border-left:2px solid #594a34aa}.leaf-motion .book-leaf:after{content:'';position:absolute;pointer-events:none;z-index:14;top:0;right:0;bottom:0;width:calc(var(--leaf-arrival,0)* 100px);background:linear-gradient(90deg,transparent,#251a1066);opacity:var(--leaf-arrival,0)}@media(max-width:900px),(prefers-reduced-motion:reduce){.book-leaf{transform:none!important;filter:none!important}.leaf-edge{display:none}}
+/* A quiet midnight-blue drawing desk, with original collection doodles. */
+#book-portal .portal-stage,.closing-stage{background-color:#0c1732;background-image:radial-gradient(ellipse at 50% 40%,#203d6a99,transparent 68%),radial-gradient(#d3dffc15 1px,transparent 1px);background-size:auto,17px 17px}.portal-camera{z-index:1}.desk-doodles{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:var(--desk-opacity,1)}.desk-doodles img{position:absolute;width:clamp(55px,9vw,130px);height:auto;filter:drop-shadow(3px 4px 0 #0007)}.desk-doodles img:first-child{left:8%;bottom:18%;transform:rotate(-13deg)}.desk-doodles img:nth-child(2){right:9%;top:18%;transform:rotate(12deg)}.desk-doodles img:nth-child(3){right:9%;bottom:17%;width:clamp(45px,7vw,95px);transform:rotate(-9deg)}.portal-step{z-index:6}.portal-hint{color:var(--paper)}
+#book-closing{height:220svh;position:relative;background:#0c1732}.closing-stage{height:100svh;position:sticky;top:0;overflow:hidden;isolation:isolate}.closing-stage .portal-paper{transform:none}.closing-stage .portal-front h2{font:clamp(38px,calc(var(--book-h,560px)*.115),76px)/.98 var(--display);color:var(--blue);text-shadow:3px 3px 0 var(--yellow);margin:0}.closing-caption{position:absolute;z-index:7;left:0;right:0;bottom:24px;text-align:center;color:var(--paper);opacity:var(--closing-caption,0)}.closing-caption p{font:28px var(--hand);margin:0 0 14px}.closing-caption a{display:inline-block;margin:0 6px 6px;background:var(--yellow);color:var(--ink);border:2px solid var(--ink);padding:9px 13px;font:10px var(--mono);box-shadow:3px 3px 0 #0006}.closing-caption a:focus-visible{outline:3px solid white;outline-offset:4px}.closing-inner-label{position:absolute;top:calc(50% - var(--book-h,560px)/2 + 30px);left:50%;transform:translateX(-50%);font:12px var(--mono);color:var(--blue)}
+@media(max-width:700px){.desk-doodles img:first-child{left:3%;bottom:23%;width:55px}.desk-doodles img:nth-child(2){right:3%;top:15%;width:60px}.desk-doodles img:nth-child(3){right:4%;bottom:24%;width:45px}.closing-caption p{font-size:22px}.closing-caption a{font-size:8px}#book-closing{height:180svh}}@media(prefers-reduced-motion:reduce){#book-closing{height:100svh}.closing-caption{opacity:1!important}.closing-stage .portal-lid{transform:rotate(-3deg)!important}.closing-stage .portal-paper{display:none}.desk-doodles{opacity:1!important}}
+
+.inside-mission{position:absolute;inset:8% 11%;display:flex;flex-direction:column;justify-content:center;gap:16px;color:var(--ink);text-align:left}.inside-mission small{font:9px/1.6 var(--mono);color:var(--blue)}.inside-mission h2{font:clamp(24px,calc(var(--book-h,560px)*.06),36px)/1.08 var(--display);color:var(--blue);margin:0}.inside-mission p{font:clamp(15px,calc(var(--book-h,560px)*.034),22px)/1.25 var(--hand);margin:0}.inside-mission b{font:clamp(14px,calc(var(--book-h,560px)*.03),20px)/1.25 var(--hand);color:#b43d2b;margin-top:7px}.portal-house-ui{position:absolute;inset:0;z-index:4;opacity:0;pointer-events:none}.portal-house-ui .chapter-card{max-width:390px;padding:22px;top:11%;left:3vw;background:rgba(18,57,150,.87)}.portal-house-ui .chapter-card h2{font-size:clamp(3rem,5vw,5.2rem)}
+
+.portal-house-ui .comic-arrow{font-size:clamp(.9rem,1.55vw,1.55rem);padding:6px 10px;background:rgba(255,255,255,.88);border:3px solid var(--ink);box-shadow:4px 5px 0 var(--yellow);-webkit-text-stroke:1px var(--ink);text-shadow:2px 2px 0 var(--ink);white-space:nowrap}
+.portal-house-ui .a-stairs{left:42%;top:16%;transform:rotate(-2deg)}
+.portal-house-ui .a-archive{left:27%;top:41%;transform:rotate(-3deg)}
+.portal-house-ui .a-economy{left:53%;top:42%;transform:rotate(2deg)}
+.portal-house-ui .a-agents{left:45%;top:61%;right:auto;transform:rotate(-2deg)}
+.portal-house-ui .a-vault{left:45%;bottom:8%;top:auto;transform:rotate(2deg)}
+.portal-house-ui .a-scanner{right:4%;top:41%;transform:rotate(3deg)}
+.portal-house-ui .a-phases{left:5%;right:auto;bottom:10%;top:auto;transform:rotate(-3deg)}
+@media(max-width:700px){.inside-mission{gap:10px;inset:7% 9%}.inside-mission small{font-size:7px}.inside-mission h2{font-size:23px}.inside-mission p{font-size:15px}.inside-mission b{font-size:14px}.portal-house-ui .chapter-card{left:12px;right:12px;max-width:none}.portal-house-ui .comic-arrow{font-size:.58rem;padding:4px 6px}.portal-house-ui .a-stairs{left:37%;top:45%}.portal-house-ui .a-archive{left:5%;top:58%}.portal-house-ui .a-economy{left:50%;top:57%}.portal-house-ui .a-agents{left:35%;top:69%}.portal-house-ui .a-vault{left:36%;bottom:8%}.portal-house-ui .a-scanner{right:2%;top:64%}.portal-house-ui .a-phases{left:2%;bottom:13%}}
+
+/* Close the right-hand leaf onto the left; the outside back cover faces us. */
+.closing-stage .portal-lid{left:50%;transform-origin:0 50%}.closing-stage .portal-paper{clip-path:inset(var(--clip-y,15%) var(--close-right,50%) var(--clip-y,15%) var(--close-left,15%) round 5px);transform:translateX(var(--book-x,0px))}.closing-stage .portal-paper .portal-world{translate:calc(var(--book-w,440px)* -.5) 0}.closing-stage .closing-inner-label{left:calc(50% - var(--book-w,440px)*.5)}.closing-stage .closing-last-page{background:#f5ead1;justify-content:center;gap:18px;box-shadow:4px 4px 0 #0004}.closing-stage .closing-last-page:before{display:none}.closing-stage .closing-last-page h2{font-size:clamp(28px,calc(var(--book-h,560px)*.08),45px);color:var(--blue);text-shadow:none}.closing-stage .closing-last-page p{margin:0}.closing-stage .closing-back-cover{background:#164b91!important;display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff4dc;gap:18px;text-align:center;border:4px solid var(--ink)}.closing-back-cover b{font:clamp(20px,3vw,32px) var(--display);letter-spacing:.035em}.closing-back-cover span{font:10px var(--mono)}.closing-back-cover p{font:27px var(--hand);margin:10px 0 0}.closing-back-cover:after{border-color:#fff4dc66}.closing-stage .closing-back-cover>img{object-fit:contain}.closing-stage .closing-caption{z-index:8}
+@media(prefers-reduced-motion:reduce){.closing-stage .portal-lid{left:50%;transform:translateX(calc(var(--book-w,440px)* .5)) rotateY(-180deg)!important}.closing-stage .closing-last-page{visibility:hidden!important}.closing-stage .closing-back-cover{visibility:visible!important}}
+
+/* Illustrated interior headings and a hand-stamped footer. */
+.portal-paper-caption,.closing-inner-label{top:calc(50% - var(--book-h,560px)*.34);width:calc(var(--book-w,440px)*.84);white-space:normal;text-align:center;font:clamp(21px,calc(var(--book-h,560px)*.057),37px)/1.1 var(--display);letter-spacing:.015em;color:var(--blue);text-shadow:1px 2px 0 #ffda3766}.portal-paper-caption{opacity:var(--paper-label,0)}.inside-seal{position:absolute;top:calc(50% + var(--book-h,560px)*.34);left:50%;translate:-50% 0;transform:rotate(-4deg);padding:7px 13px;border:3px double #164b91;color:#164b91;text-align:center;opacity:var(--paper-label,0)}.inside-seal b,.inside-seal span{display:block;font:9px/1.6 var(--mono);letter-spacing:.08em}.inside-seal span{font-size:8px}.closing-stage .inside-seal{left:calc(50% - var(--book-w,440px)*.5);opacity:1}.closing-stage .closing-inner-label{left:calc(50% - var(--book-w,440px)*.5)}@media(max-width:700px){.portal-paper-caption,.closing-inner-label{font-size:23px}.inside-seal{padding:5px 8px}.inside-seal b{font-size:8px}.inside-seal span{font-size:7px}}
+
+/* Exit the full-frame drawing first, then rest, then close the right leaf. */
+#book-closing{height:350svh}.closing-stage .portal-paper .portal-world{translate:calc(var(--book-w,440px)* -.5 * var(--retreat,0)) 0}.closing-stage .closing-inner-label,.closing-stage .inside-seal{opacity:var(--end-label,0)}.portal-paper-caption,.closing-inner-label{font-size:clamp(21px,calc(var(--book-h,560px)*.052),32px);line-height:1.08;top:calc(50% - var(--book-h,560px)*.36)}@media(max-width:700px){#book-closing{height:300svh}.portal-paper-caption,.closing-inner-label{font-size:22px}}@media(prefers-reduced-motion:reduce){#book-closing{height:100svh}}
+
+/* One pinned camera from the readable planning room to its painted left wing. */
+.closing-room-viewport{position:absolute;inset:0;z-index:4;overflow:hidden;transform-origin:50% 50%;will-change:transform,opacity;background:var(--paper)}
+.continuous-room-exit #roadmap{margin:0;box-shadow:none;transform:translateY(var(--room-read-y,0px))!important;will-change:transform;isolation:auto}
+.continuous-room-exit #roadmap>.leaf-edge{display:none}
+.continuous-room-exit #roadmap:after{display:none}
+.continuous-room-exit .portal-world{transform:translate(var(--room-camera-x,0px),var(--room-camera-y,0px)) scale(var(--world-scale,5.8));transform-origin:center}
+@media(prefers-reduced-motion:reduce){.closing-room-viewport{display:none}}
+
+/* Read the detailed reward policy without crowding the illustrated room. */
+.asc-card{max-height:82svh;overflow-y:auto;scrollbar-width:thin;overscroll-behavior:contain}
+.reward-policy{margin:12px 0;border:2px solid #fff7;padding:10px;font: .86rem/1.35 var(--hand)}
+.reward-policy summary{cursor:pointer;color:var(--yellow);font:.8rem var(--mono)}
+.reward-policy p{font:1rem/1.35 var(--hand);margin:10px 0}
+@media(prefers-reduced-motion:reduce){.asc-card{scroll-behavior:auto}}
+
+/* Individual source viewports remove padding without altering final artwork. */
+.card-art-frame{display:block;position:relative;width:100%;aspect-ratio:var(--art-ratio);overflow:hidden;border-radius:4.5% / 7.4%;isolation:isolate}
+body .card-art-frame>img{position:absolute!important;width:var(--art-width)!important;max-width:none!important;height:var(--art-height)!important;left:var(--art-left)!important;top:var(--art-top)!important;object-fit:fill!important;aspect-ratio:auto!important;margin:0!important;border:0!important;border-radius:0!important;transform:none!important;box-shadow:none!important}
+.cover-card-fan>.card-art-frame{position:absolute;width:70%}
+.cover-card-fan>.card-art-frame:nth-child(1){left:0;top:10%;transform:rotate(-9deg)}
+.cover-card-fan>.card-art-frame:nth-child(2){left:15%;top:0;transform:rotate(1deg)}
+.cover-card-fan>.card-art-frame:nth-child(3){left:30%;top:15%;transform:rotate(10deg)}
+/* Both Coffer panels remain readable on shorter screens. */
+.vault-panel-stack{position:absolute;z-index:7;right:4vw;top:100px;bottom:90px;width:min(42vw,660px);display:flex;flex-direction:column;gap:24px;padding:4px 12px 16px 4px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+#vault .vault-panel-stack>.vault-priority,#vault .vault-panel-stack>.mini-dashboard{position:relative;inset:auto;width:100%;max-width:none;margin:0;transform:none;flex-shrink:0}
+@media(max-width:900px){#vault .vault-focus{min-height:1750px}.vault-panel-stack{left:14px;right:14px;top:660px;bottom:90px;width:auto}}
+
+/* Keep the gallery track explicit: absolute image contents have no intrinsic width. */
+#archive .collection-cards{width:100%;min-width:0;justify-self:stretch}
+#archive .collection-card{display:block;min-width:0;width:100%}
+#archive .collection-card>.card-art-frame{width:100%;min-width:0;flex:none}
+/* A clean desk edge under the closed cover, with a legible scroll cue. */
+#book-portal .portal-paper{opacity:var(--paper-reveal,0)}
+#book-portal .portal-front{box-shadow:6px 9px 16px #0006}
+#book-portal .portal-hint{bottom:24px;display:flex;flex-direction:column;align-items:center;gap:4px;color:#fff1cc}
+#book-portal .portal-hint b{background:none;padding:0;color:#fff1cc;font:11px/1.4 var(--mono);letter-spacing:.08em;text-shadow:0 2px 5px #0008}
+#book-portal .portal-hint span{font:24px/1 var(--hand);margin:0;color:#fff1cc}
+@media(max-width:700px){#book-portal .portal-hint{bottom:62px}#book-portal .portal-hint b{font-size:9px}}
+/* Keep the scanner room label out of the heading's text flow. */
+#scanner>.house-wing-tag{position:absolute;top:90px;right:5vw;width:max-content;max-width:90%;z-index:8}
+#scanner>.room-memory{position:absolute}
+@media(max-width:700px){#scanner>.house-wing-tag{top:72px;right:18px;font-size:.52rem}}
+
+/* The interior shares the cover hinge and stays hidden during the closed pause. */
+#book-portal .portal-paper{transform-origin:calc(50% - var(--book-w,440px)/2) 50%}
+#stairs .moving-key{z-index:3;pointer-events:none}
+#stairs .asc-card{z-index:8}
+/* Reserve the upper stair landing for Partner and Keyholder controls. */
+#stairs .asc-card{top:max(26svh,calc(21svh + 54px));max-height:calc(74svh - 85px);max-width:min(560px,43vw)}
+#stairs .rank-labels{z-index:10;pointer-events:none}
+#stairs .rank-labels .rank{pointer-events:auto}
+#stairs .rank[data-rank="4"]{top:max(12%,86px)}
+/* Keep chapter turns light and avoid a second delayed entrance inside the sheet. */
+.leaf-motion .book-leaf{transform:perspective(1800px) rotateY(calc(var(--leaf-arrival,0)* -4deg))}
+.book-leaf .chapter-card{opacity:1;transform:rotate(-1deg);transition:none}
+@media(max-width:900px){#stairs .asc-card{top:340px!important;left:14px!important;right:14px!important;max-width:none;max-height:640px}#stairs .scene-sticky{min-height:1100px}#stairs .rank-labels .rank{top:calc(110px + var(--rank-row,0)*42px);left:auto;right:20px}#stairs .rank[data-rank="0"]{--rank-row:4}#stairs .rank[data-rank="1"]{--rank-row:3}#stairs .rank[data-rank="2"]{--rank-row:2}#stairs .rank[data-rank="3"]{--rank-row:1}#stairs .rank[data-rank="4"]{--rank-row:0}}
+
+/* Official letter artwork keeps every color and outline identical to the masthead. */
+#book-portal .portal-brand-row{display:block;height:calc(var(--book-h,560px)*.13);width:auto;max-width:100%;margin-top:4px;overflow:hidden}
+#book-portal .portal-front h1{position:relative;z-index:2}
+/* Original arch as a quiet paper watermark; never intercepts text or controls. */
+#book-portal .portal-front:after,#book-portal .portal-back:before,.closing-last-page:after,.closing-back-cover:before{content:'';position:absolute;inset:12% 4%;background:url('assets/cofferhouse-arch-official.png') center/contain no-repeat;opacity:.075;filter:blur(.7px);pointer-events:none;z-index:0;transform:rotate(-6deg)}
+#book-portal .portal-front:after{inset:35% 4% 4%;opacity:.045}
+#book-portal .inside-mission{z-index:1}
+.closing-last-page>*,.closing-back-cover>*{position:relative;z-index:1}
+.closing-last-page:after{inset:10% 2%;opacity:.085}
+.closing-back-cover:before{inset:8% 0;opacity:.16;filter:blur(1px)}
+.closing-official-brand{display:block;width:90%;max-width:300px}
+.closing-official-brand img{display:block;width:100%;height:auto}
+
+/* Visible brand lettering; each letter uses the official logo palette. */
+#book-portal .portal-front:after,.closing-last-page:after,.closing-back-cover:before{display:none}
+#book-portal .portal-front h1>.portal-brand-text{display:block;color:inherit;text-shadow:none;white-space:nowrap;font-size:calc(var(--book-h,560px)*.115);line-height:1.04;letter-spacing:0}
+.portal-brand-text i,.closing-official-brand i{font-style:normal;-webkit-text-stroke:1.2px #211c17;paint-order:stroke fill;text-shadow:1px 2px 0 #211c1733}
+.brand-orange{color:#e67430}.brand-gold{color:#f1bd36}.brand-teal{color:#20988b}
+.closing-back-cover .closing-official-brand{width:auto;max-width:100%;font:clamp(18px,calc(var(--book-w,440px)*.063),30px)/1.2 var(--display);letter-spacing:0;white-space:nowrap}
+
+/* One paper stock throughout; the outside cover keeps its spine and casing. */
+:root{--notebook-stock:#f7efd8;--notebook-grain:radial-gradient(ellipse at 24% 28%,#8e6f3310,transparent 65%),repeating-linear-gradient(8deg,#967d4b04 0 1px,transparent 1px 4px),repeating-linear-gradient(98deg,#fff9e50b 0 1px,transparent 1px 5px)}
+#book-portal .portal-front,#book-portal .portal-back,.portal-paper,.closing-stage .closing-last-page{background-color:var(--notebook-stock);background-image:var(--notebook-grain)}
+#book-portal .portal-front{border-width:5px;border-radius:4px 12px 12px 4px;box-shadow:5px 7px 0 #2c251e88,9px 12px 18px #0004}
+#book-portal .portal-back{background-image:linear-gradient(90deg,#7a603422,transparent 14%),var(--notebook-grain)}
+.closing-stage .closing-last-page{border:0;border-radius:4px;box-shadow:inset 3px 0 8px #7a603419}
+.closing-stage .closing-back-cover{background-image:var(--notebook-grain)!important}
+.portal-brand-text i,.closing-official-brand i{-webkit-text-stroke:.075em #171714;paint-order:stroke fill;text-shadow:1px 2px 0 #171714}
+
+#book-portal .portal-emblem{width:clamp(64px,calc(var(--book-w,440px)*.2),96px);height:clamp(64px,calc(var(--book-w,440px)*.2),96px);object-fit:contain;top:6%;right:9%;image-rendering:auto}
+/* Give the cover title its own space beneath the edition and emblem. */
+#book-portal .portal-front h1{margin-top:calc(var(--book-h,560px)*.095);flex-shrink:0}
+#book-portal .portal-front h1>span:first-child{color:var(--blue);-webkit-text-stroke:.05em #171714;paint-order:stroke fill;text-shadow:3px 4px 0 var(--yellow),5px 6px 0 #171714;line-height:1.05}
+#book-portal .portal-front h1>.portal-brand-text{font-size:min(calc(var(--book-h,560px)*.145),calc(var(--book-w,440px)*.20));line-height:1.04}
+#book-portal .portal-brand-text i{-webkit-text-stroke:.095em #171714;text-shadow:1px 2px 0 #171714}
+#book-portal .portal-front>p:not(.portal-cover-note){margin-top:calc(var(--book-h,560px)*.035)}
+/* Watermark belongs to the inside thank-you leaf, not either exterior cover. */
+.closing-stage .closing-last-page:after{display:block;background-image:url('assets/cofferhouse-arch-vector.svg');inset:12% 3%;opacity:.075;filter:blur(.6px);transform:rotate(-6deg);z-index:0;pointer-events:none}
+@media(max-width:700px){#book-portal .portal-front h1{margin-top:calc(var(--book-h,560px)*.075)}#book-portal .portal-front h1>.portal-brand-text{font-size:min(calc(var(--book-h,560px)*.14),calc(var(--book-w,440px)*.20))}}
+
+/* Cover refinements: more hierarchy, lighter notes and a lower closing scribble. */
+#book-portal .portal-front h1>span:first-child{position:relative;transform:translateY(clamp(-38px,calc(var(--book-h,560px)* -.06),-20px));font-size:calc(var(--book-h,560px)*.125);-webkit-text-stroke:0;paint-order:normal;text-shadow:3px 4px 0 var(--yellow);margin-bottom:-12px}
+#book-portal .portal-front h1>.portal-brand-text{font-size:min(calc(var(--book-h,560px)*.155),calc(var(--book-w,440px)*.215))}
+#book-portal .portal-front>p{font-size:clamp(13px,calc(var(--book-h,560px)*.028),18px);line-height:1.2}
+#book-portal .portal-cover-note{position:absolute;right:10%;bottom:5%;margin:0!important}
+/* Mission copy uses the full writing area rather than a compact central block. */
+#book-portal .inside-mission{inset:8% 10%;justify-content:space-between;gap:12px}
+/* Matching fine frames on every interior leaf, fading before entering the art. */
+.notebook-page-frame{position:absolute;z-index:3;pointer-events:none;border:1px solid #302b2466;inset:calc(var(--clip-y,0px) + 13px) calc(var(--clip-x,0px) + 13px);opacity:var(--paper-label,0)}
+.closing-stage .notebook-page-frame{inset:calc(var(--clip-y,0px) + 13px) calc(var(--close-right,0px) + 13px) calc(var(--clip-y,0px) + 13px) calc(var(--close-left,0px) + 13px);opacity:var(--end-label,0)}
+#book-portal .portal-back:after{border-color:#302b2466}
+.closing-stage .closing-last-page:before{content:'';display:block;position:absolute;inset:13px;width:auto;border:1px solid #302b2466;background:none;box-shadow:none;z-index:2;pointer-events:none}
+.closing-stage .closing-back-cover:after{border-color:#17171488}
+@media(max-width:700px){#book-portal .inside-mission{gap:9px}}
+
+/* Reserve the return link inside the existing header, away from chapter artwork. */
+body>header .header-home{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;flex-shrink:0;min-width:0;height:100%}
+body>header .header-home .brand{height:29px;gap:5px}
+body>header .header-home .brand-arch{width:28px;height:28px;object-fit:contain}
+body>header .header-home .brand-name{font-size:16px}
+body>header .header-house-back{display:inline-flex;align-items:center;min-height:24px;padding:2px 7px;background:var(--blue);color:white;border:2px solid var(--ink);box-shadow:2px 2px 0 var(--yellow);font:.58rem/1.2 var(--display);white-space:nowrap}
+body>header .header-house-back:hover{background:var(--yellow);color:var(--ink)}
+body>header .header-house-back:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+@media(max-width:760px){body>header .header-home{margin-right:auto;gap:0}body>header .header-home .brand{height:25px}body>header .header-home .brand-arch{width:24px;height:24px}body>header .header-home .brand-name{font-size:12px}body>header .header-house-back{font-size:.51rem;min-height:24px;padding:2px 4px}}
+
+/* The selected label and its key occupy separate boxes at every level. */
+#stairs .rank .moving-key{position:absolute;left:0;top:calc(100% + 14px);width:120px;height:75px;transform:none;transition:none;pointer-events:none}
+#stairs .rank[data-rank="4"] .moving-key{left:auto;right:0}
+@media(max-width:900px){#stairs .rank .moving-key{left:auto;right:calc(100% + 18px);top:50%;width:90px;height:56px;transform:translateY(-50%)}}
+
+/* One token identity, scaled to its context without boxes or component leakage. */
+body .token-copy{display:contents!important;font:inherit!important;letter-spacing:inherit!important;color:inherit!important;text-transform:inherit}
+body .coffers-brand{display:inline-block!important;font-family:var(--display)!important;font-size:max(1.08em,16px)!important;font-weight:400!important;line-height:1.2!important;letter-spacing:.035em!important;white-space:nowrap;padding:0!important;margin:0 .04em!important;border:0!important;background:none!important;box-shadow:none!important;vertical-align:baseline;text-shadow:none}
+body .coffers-brand>i{display:inline!important;width:auto!important;height:auto!important;min-width:0!important;font:inherit!important;font-style:normal!important;letter-spacing:inherit!important;padding:0!important;margin:0!important;border:0!important;background:none!important;box-shadow:none!important;transform:none!important;-webkit-text-stroke:.065em var(--ink)!important;paint-order:stroke fill;text-shadow:none!important}
+body .coffers-brand>.token-ink-0{color:#e67430!important}
+body .coffers-brand>.token-ink-1{color:#f1bd36!important}
+body .coffers-brand>.token-ink-2{color:#20988b!important}
+body h1 .coffers-brand,body h2 .coffers-brand{font-size:1em!important;line-height:inherit!important;letter-spacing:.015em!important;margin:0!important}
+body h1 .coffers-brand>i,body h2 .coffers-brand>i{-webkit-text-stroke:.055em var(--ink)!important}
+#stairs .burn-switch{display:flex;flex-wrap:wrap;gap:10px}
+#stairs .burn-switch button{min-height:44px;padding:9px 12px;font-size:.8rem;line-height:1.3}
+body .project-links a{min-height:44px;padding:10px 14px;font-size:.76rem;line-height:1.3}
+/* Neutral selected controls keep the token colors distinct. */
+#stairs .burn-switch button.active{background:#d5d7dc;color:var(--ink);box-shadow:4px 4px 0 #777c85}
+#stairs .rank.active,.agent.active{background:#d5d7dc;color:var(--ink)}
+::selection{background:#ccd0d7;color:#16181c}
+/* Stable, unrotated reading surface for the longer phase checklist. */
+#roadmap .phase-board{transform:none;background:#f8f4e8;backdrop-filter:none;box-shadow:9px 10px 0 #1547b7}
+#roadmap .phase-board li{background:#f8f4e8;border-bottom:2px solid #55554f}
+#roadmap .phase-board li:nth-child(odd){background:#f0eddf}
+#roadmap .phase-board li.done{background:#eee5bc}
+#roadmap .phase-board li>div{padding:20px 24px}
+#roadmap .phase-board li p{font-family:var(--hand);font-size:20px;font-weight:400;line-height:1.6;letter-spacing:normal;color:#282a2d;margin:9px 0 0}
+#roadmap .phase-board li p>i{width:24px;font-size:14px;color:#187854}
+#roadmap .phase-board li>div>span{font-size:1.12rem;line-height:1.25}
+#roadmap .phase-board .coffers-brand{font-size:1.08em!important}
+@media(max-width:700px){#roadmap .phase-board li>div{padding:16px 14px}#roadmap .phase-board li p{font-size:19px;line-height:1.6}}
+
+.ascension-costs>.ascension-explainer{padding:16px 24px;margin:0;border-top:1px solid #77786e;font:400 19px/1.5 var(--hand);color:var(--ink)}
+#stairs #methodCopy{display:block;font:700 18px/1.4 var(--hand);margin:12px 0;color:var(--yellow)}
+/* Blue front-cover study, matching the existing outside back cover. */
+#book-portal .portal-front{background-color:#164b91;background-image:var(--notebook-grain);color:#fff8e8}
+#book-portal .portal-front>small,#book-portal .portal-front>p:not(.portal-cover-note){color:#fff8e8}
+#book-portal .portal-front h1>span:first-child{color:var(--blue);text-shadow:3px 4px 0 var(--yellow)}
+#book-portal .portal-front>.portal-cover-note{color:#ff2540;font-weight:700;text-shadow:0 1px 0 #650619}
+#book-portal .portal-front h1>span:first-child{color:#111;text-shadow:3px 4px 0 var(--yellow)}
+#book-portal .portal-front>.portal-cover-note{color:#111;text-shadow:none}
+/* Coordinated notebook casing: warm front, blue spine and blue outside back. */
+#book-portal .portal-front{background-color:#f3e8cb;background-image:var(--notebook-grain);color:#24211c;box-shadow:5px 7px 0 #164b91,9px 12px 18px #0004}
+#book-portal .portal-front:before{width:clamp(20px,calc(var(--book-w,440px)*.055),28px);border-right:3px solid #171714;background:repeating-linear-gradient(0deg,transparent 0 10px,#ffda32 10px 14px),#164b91;box-shadow:inset -5px 0 0 #10386d}
+#book-portal .portal-front>small,#book-portal .portal-front>p:not(.portal-cover-note){color:#24211c}
+#book-portal .portal-front h1>span:first-child{color:var(--blue);text-shadow:3px 4px 0 var(--yellow)}
+#book-portal .portal-front>.portal-cover-note{color:#c62836;text-shadow:none;font-weight:700}
+.closing-stage .closing-back-cover{color:#fff4dc;border-left:clamp(8px,calc(var(--book-w,440px)*.025),12px) solid #10386d;box-shadow:5px 7px 0 #24211c88}
+.closing-stage .closing-back-cover:after{border-color:#fff4dc66}
+.closing-back-cover>span,.closing-back-cover>p{color:#fff4dc}
+/* The same spine is visible on the right when viewing the closed back cover. */
+.closing-stage .closing-back-cover{border-left:4px solid var(--ink)}
+.closing-stage .closing-back-cover:before{content:'';display:block;position:absolute;inset:0 0 0 auto;width:clamp(20px,calc(var(--book-w,440px)*.055),28px);height:auto;border-left:3px solid #171714;background:repeating-linear-gradient(0deg,transparent 0 10px,#ffda32 10px 14px),#164b91;box-shadow:inset 5px 0 0 #10386d;opacity:1;filter:none;transform:none;pointer-events:none;z-index:2}
+.closing-stage .closing-back-cover:after{right:calc(clamp(20px,calc(var(--book-w,440px)*.055),28px) + 8px)}
