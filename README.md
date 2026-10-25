@@ -2,7 +2,7 @@
 
 Official marketing website and illustrated House for CofferHouse.
 
-- Website: https://cofferhouse.cheesemachineco.chatgpt.site/
+- Website: https://cofferhouse-website.vercel.app/
 - Holder Center: https://cofferhouse-scout.vercel.app/#holders
 - X: https://x.com/TheCofferHouse
 - Agent source: https://github.com/CofferHouse/cofferhouse-agent-suite
@@ -17,4 +17,4 @@ No build step is required. Publish the contents of `dist/` with a static hosting
 
 Holder Center exposes research previews. Bots and financial execution remain subject to their individual release. Telegram activation is pending. The membership collection is prepared in OpenSea but is not publicly released; mint dates, mint links and token purchase links must only be added after confirmation.
 
-The Sites hosting identity is retained in the deployment checkout; the GitHub mirror contains portable website source and assets.
+Vercel serves `dist/` using the tracked `vercel.json`. Pushes to `main` update the production website. The earlier Sites version remains a separate design preview.
