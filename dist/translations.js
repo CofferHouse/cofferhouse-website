@@ -183,6 +183,7 @@ const rows=[
 ['X / TWITTER · TBA','X / TWITTER · 待定','X / TWITTER · TBA','X / TWITTER · TBA','X / TWITTER · TBA'],
 ['BUY $COFFERS · TBA','购买 $COFFERS · 待定','$COFFERS を購入 · TBA','$COFFERS खरीदें · TBA','COMPRAR $COFFERS · TBA'],
 ['MINT · TBA','铸造 · 待定','ミント · TBA','मिंट · TBA','MINT · TBA'],
+['VIEW COLLECTION ON OPENSEA ↗','在 OPENSEA 查看系列 ↗','OPENSEA でコレクションを見る ↗','OPENSEA पर संग्रह देखें ↗','VER COLECCIÓN EN OPENSEA ↗'],
 ['VIEW ON OPENSEA · TBA','在 OPENSEA 查看 · 待定','OPENSEA で見る · TBA','OPENSEA पर देखें · TBA','VER EN OPENSEA · TBA'],
 ['Contracts, risk parameters and economics become final only when published.','合约、风险参数和经济模型只有在正式发布后才最终确定。','契約、リスクパラメータ、経済設計は公開時にのみ確定します。','कॉन्ट्रैक्ट, जोखिम पैरामीटर और अर्थव्यवस्था प्रकाशित होने पर ही अंतिम होंगे।','Los contratos, parámetros de riesgo y economía solo serán definitivos cuando se publiquen.'],
 ['Digital assets and DeFi involve risk. Yield and agent performance are variable.','数字资产与 DeFi 存在风险。收益率和代理表现会变化。','デジタル資産と DeFi にはリスクがあります。利回りとエージェント性能は変動します。','डिजिटल परिसंपत्तियों और DeFi में जोखिम है। यील्ड और एजेंट प्रदर्शन बदल सकते हैं।','Los activos digitales y DeFi implican riesgos. El rendimiento y desempeño de los agentes son variables.'],
